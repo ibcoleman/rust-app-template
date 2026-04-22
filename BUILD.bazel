@@ -12,7 +12,7 @@ rust_library(
     crate_root = "src/lib.rs",
     edition = "2021",
     rustc_env = {"SQLX_OFFLINE": "true"},
-    compile_data = glob([".sqlx/**/*.json", "migrations/*.sql"]),
+    compile_data = glob([".sqlx/**/*.json", "migrations/*.sql"]) + ["//frontend:dist"],
     deps = [
         "@crates//:axum",
         "@crates//:mime_guess",
@@ -40,7 +40,7 @@ rust_library(
     crate_root = "src/lib.rs",
     edition = "2021",
     rustc_env = {"SQLX_OFFLINE": "true"},
-    compile_data = glob([".sqlx/**/*.json", "migrations/*.sql"]),
+    compile_data = glob([".sqlx/**/*.json", "migrations/*.sql"]) + ["//frontend:dist"],
     deps = [
         "@crates//:axum",
         "@crates//:mime_guess",
@@ -67,6 +67,7 @@ rust_binary(
     srcs = ["src/main.rs"],
     crate_root = "src/main.rs",
     edition = "2021",
+    compile_data = ["//frontend:dist"],
     deps = [
         ":lib",
         "@crates//:anyhow",
