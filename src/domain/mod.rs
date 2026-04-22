@@ -14,11 +14,16 @@ pub const MAX_NOTE_BODY_LEN: usize = 4096;
 /// Newtype wrapper over `Uuid` for note identifiers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct NoteId(pub Uuid);
+pub struct NoteId(pub(crate) Uuid);
 
 impl NoteId {
     pub fn new_v4() -> Self {
         Self(Uuid::new_v4())
+    }
+
+    /// Extract the inner Uuid.
+    pub fn as_uuid(self) -> Uuid {
+        self.0
     }
 }
 

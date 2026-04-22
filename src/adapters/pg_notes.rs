@@ -51,7 +51,7 @@ impl NoteRepository for PgNotes {
         let id = NoteId::new_v4();
         let created_at: OffsetDateTime = sqlx::query_scalar!(
             r#"INSERT INTO notes (id, body) VALUES ($1, $2) RETURNING created_at"#,
-            id.0,
+            id.as_uuid(),
             new.body,
         )
         .fetch_one(&self.pool)
@@ -68,7 +68,7 @@ impl NoteRepository for PgNotes {
     async fn get(&self, id: NoteId) -> Result<Option<Note>, RepoError> {
         let row = sqlx::query!(
             r#"SELECT id, body, created_at FROM notes WHERE id = $1"#,
-            id.0
+            id.as_uuid()
         )
         .fetch_optional(&self.pool)
         .await
