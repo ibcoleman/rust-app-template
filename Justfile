@@ -25,7 +25,7 @@ check:
     cargo fmt --check
     cargo clippy --all-targets -- -D warnings
     just test
-    bazel run //frontend:lint
+    cd frontend && pnpm lint
 
 # Auto-fix formatting and clippy warnings where possible.
 fix:

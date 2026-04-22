@@ -1,23 +1,13 @@
-load("@aspect_rules_js//js:defs.bzl", "js_binary")
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 
 package(default_visibility = ["//visibility:public"])
 
 npm_link_all_packages(name = "node_modules")
 
-ts_project(
-    name = "src",
-    srcs = glob(["src/**/*.ts"]),
-    tsconfig = "tsconfig.json",
-    declaration = False,
-    source_map = False,
-    transpiler = "tsc",
-    deps = [
-        ":node_modules/neverthrow",
-        ":node_modules/type-fest",
-    ],
-)
+# TypeScript compilation and type-checking handled via pnpm build and pnpm typecheck.
+# TypeScript is compiled to dist/ which is embedded in the Rust binary via rust-embed.
+# Bazel does not perform the TypeScript build step; that is done in the pnpm build path.
+# See docs/RATIONALE.md for architecture rationale.
 
 # Phase 5 plan: pre-built frontend dist, not hermetic in Bazel.
 # pnpm build populates this directory; Bazel consumes it via rust-embed.
@@ -25,16 +15,4 @@ ts_project(
 filegroup(
     name = "dist",
     srcs = glob(["dist/**/*"]),
-)
-
-js_binary(
-    name = "lint",
-    entry_point = ":node_modules/eslint/bin/eslint.js",
-    args = ["src", "--config", "eslint.config.js"],
-    chdir = package_name(),
-    data = glob(["src/**/*", "eslint.config.js"]) + [
-        ":node_modules/@typescript-eslint/parser",
-        ":node_modules/@typescript-eslint/eslint-plugin",
-        ":node_modules/eslint-plugin-neverthrow",
-    ],
 )

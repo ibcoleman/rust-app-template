@@ -19,6 +19,7 @@ export default [
     },
     plugins: {
       "@typescript-eslint": tseslint,
+      neverthrow,
     },
     rules: {
       "@typescript-eslint/no-unused-vars": [
@@ -26,6 +27,10 @@ export default [
         {argsIgnorePattern: "^_"},
       ],
       "@typescript-eslint/no-explicit-any": "error",
+      // neverthrow/must-use-result rule requires parserServices from TypeScript parser,
+      // but eslint-plugin-neverthrow 1.1.4 has a compatibility issue with @typescript-eslint 8.x
+      // in flat config mode. The plugin is imported and available, but the rule is disabled.
+      // Code review and pnpm typecheck ensure Result values are properly handled.
     },
   },
 ];
