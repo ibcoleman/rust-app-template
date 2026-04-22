@@ -1,0 +1,18 @@
+[package]
+name = "rust_app_template"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "Hexagonal HTTP service template"
+license = "MIT"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+# Populated in Phase 2.
