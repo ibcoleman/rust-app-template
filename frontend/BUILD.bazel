@@ -19,6 +19,9 @@ ts_project(
     ],
 )
 
+# Phase 5 plan: pre-built frontend dist, not hermetic in Bazel.
+# pnpm build populates this directory; Bazel consumes it via rust-embed.
+# See docs/RATIONALE.md for architecture rationale.
 filegroup(
     name = "dist",
     srcs = glob(["dist/**/*"]),

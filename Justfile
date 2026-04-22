@@ -49,3 +49,4 @@ add-fe-dep pkg:
 # Update frontend dependencies.
 update-fe-deps:
     cd frontend && pnpm update
+    @echo "remember: run 'just bazel-repin' if Bazel targets need updating"
