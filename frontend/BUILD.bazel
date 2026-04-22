@@ -1,4 +1,3 @@
-load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:defs.bzl", "npm_link_all_packages")
@@ -20,28 +19,9 @@ ts_project(
     ],
 )
 
-js_binary(
-    name = "vite_build",
-    entry_point = ":node_modules/vite/bin/vite.js",
-    args = ["build"],
-    chdir = package_name(),
-    data = glob([
-        "src/**/*",
-        "index.html",
-        "vite.config.ts",
-        "tsconfig.json",
-    ]) + [
-        ":node_modules/vite",
-        ":node_modules/neverthrow",
-        ":node_modules/type-fest",
-    ],
-)
-
-copy_to_directory(
+filegroup(
     name = "dist",
-    srcs = [":vite_build"],
-    root_paths = ["frontend/dist"],
-    out = "dist",
+    srcs = glob(["dist/**/*"]),
 )
 
 js_binary(

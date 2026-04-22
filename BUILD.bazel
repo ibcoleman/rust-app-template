@@ -1,6 +1,9 @@
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
 
 package(default_visibility = ["//visibility:public"])
+
+npm_link_all_packages(name = "node_modules")
 
 rust_library(
     name = "lib",
