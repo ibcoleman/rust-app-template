@@ -121,7 +121,7 @@ This is **intentional design**: catch misconfiguration before linking, not at ru
 ### TypeScript & Linting
 
 - **TypeScript:** Pinned to exact version (5.5.4, not ~5.5) to ensure `aspect_rules_ts` reproducibility.
-- **ESLint:** Flat config with neverthrow plugin registered (though the rule requires refinement for full type-aware linting).
+- **ESLint:** Flat config with neverthrow plugin registered. **Note (Phase 5 cycle-3 pivot):** `must-use-result` rule is disabled due to `@typescript-eslint` 8.x / flat-config incompatibility. The guardrail is enforced at code-review time instead.
 - **Type Safety:** `@typescript-eslint/no-explicit-any: error` enforces explicit typing.
 
 ### Summary of Trade-offs
