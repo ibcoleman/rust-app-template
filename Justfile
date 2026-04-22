@@ -18,7 +18,7 @@ test:
 
 # Integration tests that require `just dev` to be running (real kind-hosted Postgres).
 test-integration:
-    bazel test //tests:integration_db --test_output=errors --cache_test_results=no --test_arg=--ignored
+    bazel test //tests:integration_db --test_output=errors --cache_test_results=no --test_arg=--ignored --test_arg=--test-threads=1
 
 # Formatting, linting, and `just test` — matches CI.
 check:
