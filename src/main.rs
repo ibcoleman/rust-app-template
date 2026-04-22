@@ -18,7 +18,8 @@ async fn main() -> anyhow::Result<()> {
         .parse()
         .context("BIND_ADDR is not a valid socket address")?;
 
-    let state = rust_app_template::http::AppState::default();
+    let greeter = std::sync::Arc::new(rust_app_template::adapters::StaticGreeter::new());
+    let state = rust_app_template::http::AppState { greeter };
     let app = rust_app_template::http::router(state);
 
     let listener = TcpListener::bind(bind_addr).await.context("bind failed")?;

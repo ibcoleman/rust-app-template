@@ -1,1 +1,3 @@
-// populated in Phase 3 and Phase 4
+pub mod static_greeter;
+
+pub use static_greeter::StaticGreeter;

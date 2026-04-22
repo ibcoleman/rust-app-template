@@ -1,20 +1,26 @@
 pub mod error;
+pub mod greet;
 
-use axum::{extract::State, routing::get, Router};
+use std::sync::Arc;
+
+use axum::{routing::get, Router};
 use tower_http::trace::TraceLayer;
 
-#[derive(Clone, Default)]
+use crate::ports::GreetingPort;
+
+#[derive(Clone)]
 pub struct AppState {
-    // Fields added in Phase 3 (greeter) and Phase 4 (notes).
+    pub greeter: Arc<dyn GreetingPort>,
 }
 
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/healthz", get(healthz))
+        .route("/api/greet", get(greet::handler))
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }
 
-async fn healthz(State(_): State<AppState>) -> &'static str {
+async fn healthz() -> &'static str {
     "ok"
 }
