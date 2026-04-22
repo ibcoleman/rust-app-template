@@ -77,12 +77,12 @@ Adapters know about infrastructure (databases, APIs, file systems). Domain logic
 
 **HTTP boundary.** Axum router, request handlers, response formatting:
 
-- `router.rs` — route definitions (`GET /api/notes/:id`)
-- `handlers.rs` — handler functions (extract request → call domain → format response)
+- `mod.rs` — Axum router definition, shared state, embedded frontend assets handler
+- `greet.rs` — handler for `GET /api/greet`
+- `notes.rs` — handlers for `GET/POST /api/notes`, `GET /api/notes/:id`
 - `error.rs` — `ApiError` enum, converts domain errors to HTTP status codes
-- `assets.rs` — embedded frontend assets (Vite build output)
 
-The HTTP adapter is the outermost ring. It knows about domain + ports but not other adapters.
+The HTTP adapter is the outermost ring. It knows about domain + ports but not other adapters. Frontend assets are compiled into the binary via `rust-embed Assets` struct in `mod.rs` — not a separate file.
 
 ## Error Flow
 

@@ -20,7 +20,7 @@ This template is complete and ready for use. All rules below are **Enforced**.
 | Build via Bazel (`rules_rust` + `crate_universe`) | **Enforced** | `bazel build //...` + `bazel test //...` canonical |
 | Local orchestration via Tilt + local k8s | **Enforced** | `just dev` wraps Tilt + kind |
 | Single `just dev` path, no hot reload | **Enforced** | One entry point for all dev work |
-| Pedantic TypeScript (strict, `neverthrow`, `type-fest`) | **Enforced** | Frontend strict config, `Tagged` types only |
+| Pedantic TypeScript (strict, `neverthrow`, `type-fest`) | **Enforced (partial)** | Frontend strict config, `Tagged` types only; `must-use-result` disabled, see `docs/RATIONALE.md` |
 | Frontend built via pnpm, not Bazel | **Enforced** | See `docs/RATIONALE.md` for Phase 5 pivots |
 | LSP plugin integration | **Enforced (env)** | `ENABLE_LSP_TOOL=1`, `rust-analyzer` on PATH |
 
@@ -34,7 +34,7 @@ This template is complete and ready for use. All rules below are **Enforced**.
 
 - **Language:** Rust (Cargo for dependency management, Bazel for build)
 - **Frontend:** TypeScript + Vite (vanilla TS scaffold, built by pnpm, embedded in binary)
-- **Build:** Bazel (`rules_rust` + `crate_universe` for Rust; `rules_js` for TS)
+- **Build:** Bazel (`rules_rust` + `crate_universe` for Rust; pnpm/Vite for the frontend (pre-built outside Bazel and consumed as a `filegroup`))
 - **Local orchestration:** Tilt watching Bazel outputs, deploying into local k8s (`k3d`/`kind`)
 - **Database:** PostgreSQL (migrations via `sqlx`)
 - **Testing:** `proptest` (property), real PostgreSQL (integration), `cargo-mutants` (mutation)
@@ -57,7 +57,7 @@ just add-fe-dep      # Add a Node dependency to frontend/package.json
 just update-fe-deps  # Refresh frontend/package-lock.json
 ```
 
-Post-Phase 6, Bazel owns build + test + frontend build + binary embedding. `just dev` is a Tilt-driven inner loop against local k8s.
+Post-Phase 6, Bazel owns the Rust build, tests, and binary assembly; the frontend is pre-built by `pnpm` and consumed via a `filegroup`. `just dev` runs `scripts/dev.sh` which runs `pnpm build` before launching Tilt. See `docs/RATIONALE.md` for the pivot history.
 
 Do **not** add `cargo watch`, `tsc --watch`, `vite dev`, `vite preview`, `pnpm dev`, or other hot-reload pathways.
 They present a state that does not match the real build and confuse both humans and agents.
@@ -87,7 +87,7 @@ They present a state that does not match the real build and confuse both humans 
 ### Error Handling with `neverthrow`
 
 - Return `Result` / `ResultAsync`. **Do not `throw`** in application code.
-- `eslint-plugin-neverthrow` enforces both "don't throw" and "you must actually handle the `Result`." Do not disable it.
+- `eslint-plugin-neverthrow`'s plugin is registered, but the `must-use-result` rule is currently disabled (tooling incompatibility with flat config + @typescript-eslint 8.x — see `docs/RATIONALE.md`). Unused-`Result` handling is enforced at code review until the rule can be re-enabled. Do not silently drop `Result` values.
 - `try` / `catch` is reserved for bridging to libraries that throw. Wrap those boundaries into `Result` at the seam and keep the rest of the code in `Result`-land.
 
 ### `type-fest` — Nominal Types

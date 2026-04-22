@@ -23,7 +23,7 @@ frontend/dist/
        ↓ (Bazel filegroup)
 //frontend:dist filegroup
        ↓ (Rust compile_data)
-src/lib.rs + src/main.rs
+src/lib.rs + src/main.rs (via rust_library and rust_binary rules)
   ├─ rust_library(compile_data = ["//frontend:dist"])
   └─ rust_binary(compile_data = ["//frontend:dist"])
        ↓
@@ -110,8 +110,8 @@ This is **intentional design**: catch misconfiguration before linking, not at ru
 
 ### Why `compile_data` on Both `rust_library` and `rust_binary`
 
-- `rust_library(compile_data = ["//frontend:dist"])` — The proc-macro expansion happens when the library is compiled. Bazel needs the dist folder present during this step.
-- `rust_binary(compile_data = ["//frontend:dist"])` — The binary links the library, which already has embedded assets. This is redundant for the embedding itself, but ensures the dist folder is available if any binary-level code references it.
+- `rust_library(compile_data = ["//frontend:dist"])` (in src/lib.rs build rules) — The proc-macro expansion happens when the library is compiled. Bazel needs the dist folder present during this step.
+- `rust_binary(compile_data = ["//frontend:dist"])` (in src/main.rs build rules) — The binary links the library, which already has embedded assets. This is redundant for the embedding itself, but ensures the dist folder is available if any binary-level code references it.
 
 ### Bazel Version Constraints
 

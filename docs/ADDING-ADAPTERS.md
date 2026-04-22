@@ -23,6 +23,8 @@ just bazel-repin
 
 ## 2. Create the decorator adapter
 
+(You will create this file.)
+
 Create `src/adapters/cached_notes.rs`:
 
 ```rust
@@ -80,6 +82,8 @@ twice, and asserts the second call served from cache (e.g., by counting
 inner-repo calls on a test-only instrumented fake).
 
 ## 5. Add the Redis sidecar to k8s
+
+(You will create these files.)
 
 Add `k8s/base/redis-deployment.yaml` + `k8s/base/redis-service.yaml`, and
 register them in `k8s/base/kustomization.yaml`. The kustomize overlay at

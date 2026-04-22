@@ -86,7 +86,7 @@ Cargo.toml         # Rust dependencies (source of truth for Bazel via crate_univ
 
 ```bash
 just doctor              # Verify all prerequisites are installed and on PATH
-just dev                 # Tilt inner loop — kind cluster + file watches + hot rebuilds
+just dev                 # Tilt inner loop — kind cluster + file watches + full rebuilds on change (no HMR)
 just test               # Run unit + property tests (offline, fast)
 just test-integration   # Run integration tests against real PostgreSQL (slower)
 just check              # cargo fmt + clippy, then bazel test //...
@@ -164,7 +164,7 @@ To remove the frontend (if you're building a headless API):
 5. Edit `src/http/mod.rs`: remove the embedded assets route and import
 6. Edit `Justfile`: remove `add-fe-dep` and `update-fe-deps` recipes
 7. Edit `.github/workflows/ci.yml`: remove pnpm steps
-8. Delete `k8s/overlays/local/patches/frontend.yaml` and remove its reference from `k8s/overlays/local/kustomization.yaml`
+8. Remove the inline `patches:` block from `k8s/overlays/local/kustomization.yaml` (the database URL patch is frontend-agnostic and stays)
 
 See `frontend/README.md` for details.
 
