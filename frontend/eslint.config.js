@@ -1,5 +1,6 @@
 import tseslint from "@typescript-eslint/eslint-plugin";
 import tsparser from "@typescript-eslint/parser";
+import neverthrow from "eslint-plugin-neverthrow";
 
 export default [
   {
@@ -13,6 +14,7 @@ export default [
         ecmaVersion: 2022,
         sourceType: "module",
         project: "./tsconfig.json",
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
@@ -23,6 +25,7 @@ export default [
         "error",
         {argsIgnorePattern: "^_"},
       ],
+      "@typescript-eslint/no-explicit-any": "error",
     },
   },
 ];

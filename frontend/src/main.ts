@@ -78,7 +78,8 @@ createForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target as HTMLFormElement;
   const formData = new FormData(form);
-  const body = formData.get("body") as string;
+  const body = formData.get("body");
+  if (typeof body !== "string" || body === "") return;
 
   const result = await api.createNote(body);
 

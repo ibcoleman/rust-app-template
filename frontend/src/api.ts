@@ -22,7 +22,7 @@ export const api = {
       fetch(
         name ? `/api/greet?name=${encodeURIComponent(name)}` : "/api/greet",
       ).then((r) => r.text()),
-      (e) => ({message: String(e)} as ApiError),
+      (e) => ({message: String(e)}),
     ),
   createNote: (body: string) =>
     jsonRequest<Note>("/api/notes", {
