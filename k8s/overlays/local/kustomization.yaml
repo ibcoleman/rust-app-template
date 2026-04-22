@@ -5,3 +5,11 @@ resources:
 namePrefix: local-
 commonLabels:
   env: local
+patches:
+  - target:
+      kind: Deployment
+      name: rust-app-template
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: postgres://app:app@local-postgres:5432/app

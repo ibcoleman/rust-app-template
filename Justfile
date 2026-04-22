@@ -11,6 +11,8 @@ reset-cluster:
     kind delete cluster --name rust-app-template || true
 
 # Offline test suite (fakes; no Postgres required).
+# Note: test targets //tests:api and //tests:properties come online in Phase 2/3.
+# Until then, this recipe will fail with a bazel error (expected state for Phase 1).
 test:
     bazel test //tests:api //tests:properties --test_output=errors
 
@@ -41,7 +43,7 @@ bazel-repin:
 
 # Add a frontend dependency (Phase 5).
 add-fe-dep pkg:
-    @echo "implemented in Phase 5"
+    @echo "add-fe-dep {{pkg}} — implemented in Phase 5"
 
 # Update frontend dependencies (Phase 5).
 update-fe-deps:

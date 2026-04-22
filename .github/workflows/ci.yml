@@ -11,8 +11,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rust-analyzer, clippy, rustfmt
+      - uses: bazelbuild/setup-bazelisk@v3
       - run: rustup install 1.80
-      - run: cargo install bazelisk
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: bazel test //... --test_output=errors
@@ -37,6 +37,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: bazelbuild/setup-bazelisk@v3
       - run: rustup install 1.80
-      - run: cargo install bazelisk
       - run: bazel test //tests:integration_db --test_tag_filters=manual --test_output=errors --cache_test_results=no
