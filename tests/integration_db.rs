@@ -1,3 +1,5 @@
+#![cfg(feature = "test-helpers")]
+
 //! Integration tests for PgNotes against real Postgres.
 //! These tests require `just dev` to be running (or a DATABASE_URL pointing to a live Postgres).
 //! Run with: `just test-integration` or `cargo test --test integration_db --all-features -- --ignored`
