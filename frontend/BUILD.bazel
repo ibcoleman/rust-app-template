@@ -1,0 +1,53 @@
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+npm_link_all_packages(name = "node_modules")
+
+ts_project(
+    name = "src",
+    srcs = glob(["src/**/*.ts"]),
+    tsconfig = "tsconfig.json",
+    declaration = False,
+    source_map = False,
+    transpiler = "tsc",
+    deps = [
+        ":node_modules/neverthrow",
+        ":node_modules/type-fest",
+    ],
+)
+
+js_binary(
+    name = "vite_build",
+    entry_point = ":node_modules/vite/bin/vite.js",
+    args = ["build"],
+    chdir = package_name(),
+    data = glob([
+        "src/**/*",
+        "index.html",
+        "vite.config.ts",
+        "tsconfig.json",
+    ]) + [
+        ":node_modules/vite",
+        ":node_modules/neverthrow",
+        ":node_modules/type-fest",
+    ],
+)
+
+copy_to_directory(
+    name = "dist",
+    srcs = [":vite_build"],
+    root_paths = ["frontend/dist"],
+    out = "dist",
+)
+
+js_binary(
+    name = "lint",
+    entry_point = ":node_modules/eslint/bin/eslint.js",
+    args = ["src", "--config", "eslint.config.js"],
+    chdir = package_name(),
+    data = glob(["src/**/*", "eslint.config.js"]) + [":node_modules/eslint"],
+)
