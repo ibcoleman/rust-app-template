@@ -23,4 +23,24 @@ crate.from_cargo(
 )
 use_repo(crate, "crates")
 
-# JS rules (aspect_rules_js, aspect_rules_ts, rules_nodejs) are added in Phase 5.
+bazel_dep(name = "aspect_rules_js", version = "2.0.2")
+bazel_dep(name = "aspect_rules_ts", version = "2.4.2")
+bazel_dep(name = "rules_nodejs", version = "6.1.5")
+bazel_dep(name = "aspect_bazel_lib", version = "2.7.7")
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(node_version = "22.12.0")
+use_repo(node, "nodejs_toolchains")
+register_toolchains("@nodejs_toolchains//:all")
+
+rules_ts = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
+rules_ts.deps(ts_version_from = "//frontend:package.json")
+use_repo(rules_ts, "npm_typescript")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//:pnpm-lock.yaml",
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm")
