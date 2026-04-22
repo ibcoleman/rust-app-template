@@ -29,5 +29,9 @@ js_binary(
     entry_point = ":node_modules/eslint/bin/eslint.js",
     args = ["src", "--config", "eslint.config.js"],
     chdir = package_name(),
-    data = glob(["src/**/*", "eslint.config.js"]) + [":node_modules/eslint"],
+    data = glob(["src/**/*", "eslint.config.js"]) + [
+        ":node_modules/eslint",
+        ":node_modules/@typescript-eslint/parser",
+        ":node_modules/@typescript-eslint/eslint-plugin",
+    ],
 )

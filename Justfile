@@ -25,7 +25,7 @@ check:
     cargo fmt --check
     cargo clippy --all-targets -- -D warnings
     just test
-    # `bazel run //frontend:lint` is added in Phase 5.
+    bazel run //frontend:lint
 
 # Auto-fix formatting and clippy warnings where possible.
 fix:
@@ -41,10 +41,11 @@ bazel-repin:
     CARGO_BAZEL_REPIN=1 bazel mod tidy
     bazel fetch @crates//...
 
-# Add a frontend dependency (Phase 5).
+# Add a frontend dependency and regenerate the lockfile.
 add-fe-dep pkg:
-    @echo "add-fe-dep {{pkg}} — implemented in Phase 5"
+    cd frontend && pnpm add {{pkg}}
+    @echo "remember: run 'just bazel-repin' if Bazel targets need updating"
 
-# Update frontend dependencies (Phase 5).
+# Update frontend dependencies.
 update-fe-deps:
-    @echo "implemented in Phase 5"
+    cd frontend && pnpm update
