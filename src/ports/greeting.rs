@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Clone, Error)]
 pub enum GreetError {
     #[error("invalid name: {0}")]
     InvalidName(String),
