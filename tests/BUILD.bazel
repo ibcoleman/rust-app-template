@@ -17,4 +17,19 @@ rust_test(
         "@crates//:serde_json",
         "@crates//:tokio",
     ],
+    proc_macro_deps = [
+        "@crates//:async-trait",
+    ],
+)
+
+rust_test(
+    name = "properties",
+    srcs = ["properties.rs"],
+    crate_root = "properties.rs",
+    edition = "2021",
+    deps = [
+        "//:lib",
+        "@crates//:proptest",
+        "@crates//:tokio",
+    ],
 )
