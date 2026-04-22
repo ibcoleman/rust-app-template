@@ -1,0 +1,18 @@
+# Safety rail: refuse to run outside the local kind context.
+allow_k8s_contexts("kind-rust-app-template")
+
+# Bazel builds the binary; the thin Dockerfile wraps it.
+custom_build(
+    ref = "rust-app-template:dev",
+    command = """
+        bazel build //:app && \
+        cp -f bazel-bin/app ./app && \
+        docker build -t $EXPECTED_REF .
+    """,
+    deps = ["BUILD.bazel", "Cargo.toml", "Cargo.lock", "MODULE.bazel", "src", "Dockerfile"],
+)
+
+k8s_yaml(kustomize("k8s/overlays/local"))
+
+k8s_resource("local-rust-app-template", port_forwards = ["8080:8080"])
+k8s_resource("local-postgres", port_forwards = ["5432:5432"])
