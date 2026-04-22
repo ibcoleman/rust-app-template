@@ -1,1 +1,3 @@
-// populated in Phase 3 (greeting) and Phase 4 (notes)
+pub mod greeting;
+
+pub use greeting::{GreetError, GreetingPort};
