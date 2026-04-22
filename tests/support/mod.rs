@@ -61,14 +61,6 @@ impl InMemoryNoteRepository {
 #[async_trait]
 impl NoteRepository for InMemoryNoteRepository {
     async fn create(&self, new: NewNote) -> Result<Note, RepoError> {
-        if new.body.len() > rust_app_template::domain::MAX_NOTE_BODY_LEN {
-            return Err(RepoError::Validation(format!(
-                "body exceeds {} bytes (got {})",
-                rust_app_template::domain::MAX_NOTE_BODY_LEN,
-                new.body.len()
-            )));
-        }
-
         let note = Note {
             id: NoteId::new_v4(),
             body: new.body,
