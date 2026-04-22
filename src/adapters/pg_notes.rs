@@ -26,6 +26,16 @@ impl PgNotes {
 
         Ok(Self { pool })
     }
+
+    /// Clear all notes from the database. Only available with the `test-helpers` feature.
+    #[cfg(feature = "test-helpers")]
+    pub async fn reset_for_tests(&self) -> Result<(), RepoError> {
+        sqlx::query("TRUNCATE notes")
+            .execute(&self.pool)
+            .await
+            .map_err(|e| RepoError::Backend(format!("reset: {e}")))?;
+        Ok(())
+    }
 }
 
 #[async_trait]
