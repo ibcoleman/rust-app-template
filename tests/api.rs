@@ -1,17 +1,41 @@
 mod support;
 
+use async_trait::async_trait;
 use axum_test::TestServer;
 use rust_app_template::adapters::StaticGreeter;
+use rust_app_template::domain::NoteId;
 use rust_app_template::http::{router, AppState};
-use rust_app_template::ports::GreetError;
+use rust_app_template::ports::{GreetError, NewNote, Note, NoteRepository, RepoError};
 use std::sync::Arc;
 use support::FakeGreeter;
+
+/// A stub NoteRepository used only for testing non-notes endpoints (healthz, greet).
+/// This satisfies the AppState type signature without implementing actual note storage.
+/// TODO(Task 9): replace with InMemoryNoteRepository once available.
+#[derive(Default)]
+struct NoopNotes;
+
+#[async_trait]
+impl NoteRepository for NoopNotes {
+    async fn create(&self, _new: NewNote) -> Result<Note, RepoError> {
+        unimplemented!("NoopNotes is a stub; use InMemoryNoteRepository for note tests")
+    }
+
+    async fn get(&self, _id: NoteId) -> Result<Option<Note>, RepoError> {
+        unimplemented!("NoopNotes is a stub; use InMemoryNoteRepository for note tests")
+    }
+
+    async fn list(&self, _limit: u32) -> Result<Vec<Note>, RepoError> {
+        unimplemented!("NoopNotes is a stub; use InMemoryNoteRepository for note tests")
+    }
+}
 
 #[tokio::test]
 async fn healthz_returns_ok() {
     // Arrange
     let state = AppState {
         greeter: Arc::new(StaticGreeter::new()),
+        notes: Arc::new(NoopNotes),
     };
     let app = router(state);
     let server = TestServer::new(app).expect("failed to create test server");
@@ -29,6 +53,7 @@ async fn greet_with_name_returns_personalized_greeting() {
     // Arrange - AC2.1: GET /api/greet?name=Ian → 200, body "Hello, Ian!"
     let state = AppState {
         greeter: Arc::new(StaticGreeter::new()),
+        notes: Arc::new(NoopNotes),
     };
     let app = router(state);
     let server = TestServer::new(app).expect("failed to create test server");
@@ -46,6 +71,7 @@ async fn greet_without_name_returns_default_greeting() {
     // Arrange - AC2.2: GET /api/greet (no name param) → 200, body "Hello, world!"
     let state = AppState {
         greeter: Arc::new(StaticGreeter::new()),
+        notes: Arc::new(NoopNotes),
     };
     let app = router(state);
     let server = TestServer::new(app).expect("failed to create test server");
@@ -64,6 +90,7 @@ async fn greet_with_overlong_name_returns_400() {
     // JSON body contains "error" key with "invalid name" prefix
     let state = AppState {
         greeter: Arc::new(StaticGreeter::new()),
+        notes: Arc::new(NoopNotes),
     };
     let app = router(state);
     let server = TestServer::new(app).expect("failed to create test server");
@@ -91,6 +118,7 @@ async fn greet_backend_error_returns_500() {
 
     let state = AppState {
         greeter: fake_greeter,
+        notes: Arc::new(NoopNotes),
     };
     let app = router(state);
     let server = TestServer::new(app).expect("failed to create test server");
