@@ -8,7 +8,11 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 use async_trait::async_trait;
-use rust_app_template::ports::{GreetError, GreetingPort};
+use rust_app_template::domain::NoteId;
+use rust_app_template::ports::{
+    GreetError, GreetingPort, NewNote, Note, NoteRepository, RepoError,
+};
+use time::OffsetDateTime;
 
 /// Fake implementation of `GreetingPort` for testing.
 /// Holds a `HashMap<Option<String>, Result<String, GreetError>>` so tests can seed canned responses.
@@ -17,6 +21,7 @@ pub struct FakeGreeter {
     responses: Mutex<HashMap<Option<String>, Result<String, GreetError>>>,
 }
 
+#[allow(dead_code)]
 impl FakeGreeter {
     /// Configure an expected response for a given name.
     pub fn expect(&self, name: Option<&str>, resp: Result<String, GreetError>) {
@@ -37,5 +42,57 @@ impl GreetingPort for FakeGreeter {
             .get(&key)
             .cloned()
             .unwrap_or_else(|| panic!("FakeGreeter: no response seeded for {key:?}"))
+    }
+}
+
+/// In-memory implementation of `NoteRepository` for testing.
+/// Stores notes in a `Mutex<Vec<Note>>`. Uses `Mutex.lock().unwrap()` which is fine in tests.
+#[derive(Default)]
+pub struct InMemoryNoteRepository {
+    notes: Mutex<Vec<Note>>,
+}
+
+impl InMemoryNoteRepository {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+#[async_trait]
+impl NoteRepository for InMemoryNoteRepository {
+    async fn create(&self, new: NewNote) -> Result<Note, RepoError> {
+        if new.body.len() > rust_app_template::domain::MAX_NOTE_BODY_LEN {
+            return Err(RepoError::Validation(format!(
+                "body exceeds {} bytes (got {})",
+                rust_app_template::domain::MAX_NOTE_BODY_LEN,
+                new.body.len()
+            )));
+        }
+
+        let note = Note {
+            id: NoteId::new_v4(),
+            body: new.body,
+            created_at: OffsetDateTime::now_utc(),
+        };
+
+        self.notes.lock().unwrap().push(note.clone());
+        Ok(note)
+    }
+
+    async fn get(&self, id: NoteId) -> Result<Option<Note>, RepoError> {
+        Ok(self
+            .notes
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|n| n.id == id)
+            .cloned())
+    }
+
+    async fn list(&self, limit: u32) -> Result<Vec<Note>, RepoError> {
+        let mut notes = self.notes.lock().unwrap().clone();
+        // Sort by created_at descending
+        notes.sort_by_key(|n| std::cmp::Reverse(n.created_at));
+        Ok(notes.into_iter().take(limit as usize).collect())
     }
 }

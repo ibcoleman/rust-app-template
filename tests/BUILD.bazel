@@ -15,6 +15,7 @@ rust_test(
         "@crates//:axum",
         "@crates//:axum-test",
         "@crates//:serde_json",
+        "@crates//:time",
         "@crates//:tokio",
     ],
     proc_macro_deps = [
@@ -24,12 +25,42 @@ rust_test(
 
 rust_test(
     name = "properties",
-    srcs = ["properties.rs"],
+    srcs = [
+        "properties.rs",
+        "support/mod.rs",
+    ],
     crate_root = "properties.rs",
     edition = "2021",
     deps = [
         "//:lib",
         "@crates//:proptest",
+        "@crates//:time",
         "@crates//:tokio",
+    ],
+    proc_macro_deps = [
+        "@crates//:async-trait",
+    ],
+)
+
+rust_test(
+    name = "integration_db",
+    srcs = [
+        "integration_db.rs",
+        "support/mod.rs",
+    ],
+    crate_root = "integration_db.rs",
+    edition = "2021",
+    tags = ["manual", "external"],
+    rustc_env = {
+        "SQLX_OFFLINE": "true",
+    },
+    deps = [
+        "//:lib_with_test_helpers",
+        "@crates//:sqlx",
+        "@crates//:time",
+        "@crates//:tokio",
+    ],
+    proc_macro_deps = [
+        "@crates//:async-trait",
     ],
 )
