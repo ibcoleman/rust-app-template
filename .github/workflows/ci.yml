@@ -12,7 +12,15 @@ jobs:
         with:
           components: rust-analyzer, clippy, rustfmt
       - uses: bazelbuild/setup-bazelisk@v3
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - run: rustup install 1.80
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F rust-app-template-frontend build
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: bazel test //... --test_output=errors

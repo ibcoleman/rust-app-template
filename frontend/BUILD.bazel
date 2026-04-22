@@ -30,8 +30,8 @@ js_binary(
     args = ["src", "--config", "eslint.config.js"],
     chdir = package_name(),
     data = glob(["src/**/*", "eslint.config.js"]) + [
-        ":node_modules/eslint",
         ":node_modules/@typescript-eslint/parser",
         ":node_modules/@typescript-eslint/eslint-plugin",
+        ":node_modules/eslint-plugin-neverthrow",
     ],
 )
