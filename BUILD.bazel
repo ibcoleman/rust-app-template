@@ -18,6 +18,9 @@ rust_library(
         "@crates//:tower-http",
         "@crates//:tracing",
     ],
+    proc_macro_deps = [
+        "@crates//:async-trait",
+    ],
 )
 
 rust_binary(
