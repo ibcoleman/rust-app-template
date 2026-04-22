@@ -4,9 +4,20 @@ package(default_visibility = ["//visibility:public"])
 
 rust_library(
     name = "lib",
-    srcs = ["src/lib.rs"],
+    srcs = glob(["src/**/*.rs"], exclude = ["src/main.rs"]),
     crate_name = "rust_app_template",
+    crate_root = "src/lib.rs",
     edition = "2021",
+    deps = [
+        "@crates//:axum",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:thiserror",
+        "@crates//:tokio",
+        "@crates//:tower",
+        "@crates//:tower-http",
+        "@crates//:tracing",
+    ],
 )
 
 rust_binary(
@@ -14,5 +25,12 @@ rust_binary(
     srcs = ["src/main.rs"],
     crate_root = "src/main.rs",
     edition = "2021",
-    deps = [":lib"],
+    deps = [
+        ":lib",
+        "@crates//:anyhow",
+        "@crates//:axum",
+        "@crates//:tokio",
+        "@crates//:tracing",
+        "@crates//:tracing-subscriber",
+    ],
 )
