@@ -19,6 +19,7 @@ check_cmd tilt
 check_cmd rust-analyzer
 check_cmd pnpm
 check_cmd docker
+check_cmd sqlx
 
 if [ "${ENABLE_LSP_TOOL:-}" != "1" ]; then
     fail "ENABLE_LSP_TOOL must be set to 1 (export it from your shell rc or devcontainer remoteEnv)."
