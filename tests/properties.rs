@@ -12,6 +12,7 @@ proptest! {
         let runtime = tokio::runtime::Runtime::new().unwrap();
         let result = runtime.block_on(StaticGreeter::new().greet(Some(&s)));
 
+        // Future-proof: guards against non-ASCII regex flags.
         prop_assume!(s.len() <= MAX_GREET_NAME_LEN);
 
         let msg = result.unwrap();

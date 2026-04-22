@@ -36,6 +36,6 @@ impl GreetingPort for FakeGreeter {
             .unwrap()
             .get(&key)
             .cloned()
-            .unwrap_or_else(|| Ok(format!("fake:{:?}", key)))
+            .unwrap_or_else(|| panic!("FakeGreeter: no response seeded for {key:?}"))
     }
 }
