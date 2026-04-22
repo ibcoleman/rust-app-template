@@ -1,0 +1,23 @@
+{
+  "name": "rust-app-template",
+  "image": "mcr.microsoft.com/devcontainers/rust:1-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {},
+    "ghcr.io/devcontainers-contrib/features/just:1": {},
+    "ghcr.io/devcontainers-contrib/features/homebrew-package:1": {},
+    "ghcr.io/devcontainers-contrib/features/pnpm:2": {}
+  },
+  "remoteEnv": {
+    "ENABLE_LSP_TOOL": "1",
+    "DATABASE_URL": "postgres://app:app@localhost:5432/app",
+    "RUST_LOG": "info"
+  },
+  "postCreateCommand": "brew install bazelisk kind kubectl tilt && rustup component add rust-analyzer clippy rustfmt",
+  "forwardPorts": [8080, 5432],
+  "customizations": {
+    "vscode": {
+      "extensions": ["rust-lang.rust-analyzer", "tamasfe.even-better-toml"]
+    }
+  }
+}
