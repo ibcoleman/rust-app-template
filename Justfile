@@ -1,3 +1,7 @@
+# List available recipes (default).
+default:
+    @just --list
+
 # Verify required tooling is on PATH.
 doctor:
     @bash scripts/doctor.sh
