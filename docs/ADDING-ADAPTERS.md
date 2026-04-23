@@ -12,7 +12,7 @@ Edit `Cargo.toml`:
 
 ```toml
 [dependencies]
-redis = { version = "0.27", features = ["tokio-comp"] }
+redis = { version = "0.27", features = ["tokio-comp"], "connection-manager" }
 ```
 
 Regenerate Bazel pins:
@@ -48,9 +48,9 @@ impl CachedNotes {
 
 #[async_trait]
 impl NoteRepository for CachedNotes {
-    async fn create(&self, new: NewNote) -> Result<Note, RepoError> { /* ... */ }
-    async fn get(&self, id: NoteId) -> Result<Option<Note>, RepoError> { /* ... */ }
-    async fn list(&self, limit: u32) -> Result<Vec<Note>, RepoError> { /* ... */ }
+    async fn create(&self, new: NewNote) -> Result<Note, RepoError> { todo!() }
+    async fn get(&self, id: NoteId) -> Result<Option<Note>, RepoError> { todo!() }
+    async fn list(&self, limit: u32) -> Result<Vec<Note>, RepoError> { todo!() }
 }
 ```
 
