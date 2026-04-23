@@ -25,7 +25,7 @@ WSL users: export `ENABLE_LSP_TOOL=1` from your shell rc file (e.g., `.zshrc`).
    ```
    (First arg: snake_case crate name. Second arg: kebab-case repo/binary name.)
 
-   The script edits every tracked file containing `rust-app-template` or `rust_app_template` (enumerated via `git ls-files | xargs grep -l ...`), so new file types are covered automatically. Lockfiles (`Cargo.lock`, `MODULE.bazel.lock`, `frontend/pnpm-lock.yaml`) and the script itself are excluded.
+   The script edits every tracked file containing `rust-app-template` or `rust_app_template` (enumerated via `git ls-files | xargs grep -l ...`), so new file types are covered automatically. It runs `cargo fmt` at the end to normalize import ordering (renaming can shift alphabetical order of `use` statements). Lockfiles (`Cargo.lock`, `MODULE.bazel.lock`, `frontend/pnpm-lock.yaml`) and the script itself are excluded.
 
    Review `git diff` before committing. You may need to `just bazel-repin` and `(cd frontend && pnpm install)` afterwards to refresh lockfiles.
 

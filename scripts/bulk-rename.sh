@@ -46,6 +46,15 @@ for f in "${FILES[@]}"; do
 done
 
 echo "Renamed ${#FILES[@]} files to snake='${SNAKE}', kebab='${KEBAB}'." >&2
+
+# Renaming can shift import ordering (e.g. `proptest` vs a new crate name that
+# sorts before it), so run rustfmt to normalize. Skip silently if cargo isn't
+# on PATH — the rename itself is still valid.
+if command -v cargo >/dev/null 2>&1; then
+    echo "Running 'cargo fmt' to normalize import ordering..." >&2
+    cargo fmt
+fi
+
 echo "Regenerate lockfiles if needed:" >&2
 echo "  just bazel-repin" >&2
 echo "  (cd frontend && pnpm install)" >&2
