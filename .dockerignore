@@ -1,0 +1,5 @@
+target
+bazel-*
+node_modules
+frontend/dist
+.git

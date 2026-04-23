@@ -1,0 +1,13 @@
+name: mutants
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+jobs:
+  mutants:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.80
+      - run: cargo install cargo-mutants --locked
+      - run: cargo mutants --no-shuffle -j 2 --exclude src/main.rs --exclude src/adapters/pg_notes.rs

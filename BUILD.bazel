@@ -1,0 +1,79 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+npm_link_all_packages(name = "node_modules")
+
+rust_library(
+    name = "lib",
+    srcs = glob(["src/**/*.rs"], exclude = ["src/main.rs"]),
+    crate_name = "rust_app_template",
+    crate_root = "src/lib.rs",
+    edition = "2021",
+    rustc_env = {"SQLX_OFFLINE": "true"},
+    compile_data = glob([".sqlx/**/*.json", "migrations/*.sql"]) + ["//frontend:dist"],
+    deps = [
+        "@crates//:axum",
+        "@crates//:mime_guess",
+        "@crates//:rust-embed",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:sqlx",
+        "@crates//:thiserror",
+        "@crates//:time",
+        "@crates//:tokio",
+        "@crates//:tower",
+        "@crates//:tower-http",
+        "@crates//:tracing",
+        "@crates//:uuid",
+    ],
+    proc_macro_deps = [
+        "@crates//:async-trait",
+    ],
+)
+
+rust_library(
+    name = "lib_with_test_helpers",
+    srcs = glob(["src/**/*.rs"], exclude = ["src/main.rs"]),
+    crate_name = "rust_app_template",
+    crate_root = "src/lib.rs",
+    edition = "2021",
+    rustc_env = {"SQLX_OFFLINE": "true"},
+    compile_data = glob([".sqlx/**/*.json", "migrations/*.sql"]) + ["//frontend:dist"],
+    deps = [
+        "@crates//:axum",
+        "@crates//:mime_guess",
+        "@crates//:rust-embed",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:sqlx",
+        "@crates//:thiserror",
+        "@crates//:time",
+        "@crates//:tokio",
+        "@crates//:tower",
+        "@crates//:tower-http",
+        "@crates//:tracing",
+        "@crates//:uuid",
+    ],
+    proc_macro_deps = [
+        "@crates//:async-trait",
+    ],
+    crate_features = ["test-helpers"],
+)
+
+rust_binary(
+    name = "app",
+    srcs = ["src/main.rs"],
+    crate_root = "src/main.rs",
+    edition = "2021",
+    compile_data = ["//frontend:dist"],
+    deps = [
+        ":lib",
+        "@crates//:anyhow",
+        "@crates//:axum",
+        "@crates//:tokio",
+        "@crates//:tracing",
+        "@crates//:tracing-subscriber",
+    ],
+)

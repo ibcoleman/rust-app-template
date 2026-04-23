@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rust-app-template
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rust-app-template
+  template:
+    metadata:
+      labels:
+        app: rust-app-template
+    spec:
+      containers:
+      - name: app
+        image: rust-app-template:dev
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        env:
+        - name: DATABASE_URL
+          value: postgres://app:app@postgres:5432/app
+        - name: BIND_ADDR
+          value: "0.0.0.0:8080"
+        - name: RUST_LOG
+          value: info
