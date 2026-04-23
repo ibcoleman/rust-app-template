@@ -3,7 +3,7 @@
 Project conventions and guardrails for AI coding agents working in this repo.
 Read this before writing code or running commands.
 
-Last verified: 2026-04-22
+Last verified: 2026-04-22 (Phase 8 iteration-1 fixes: 2026-04-23)
 
 ## Status
 
@@ -68,6 +68,9 @@ They present a state that does not match the real build and confuse both humans 
 - **Newtype-wrap primitives that carry domain meaning:** `NoteId(Uuid)` today. As new semantically-distinct values appear (other IDs, timestamps with semantic meaning, etc.), wrap them. Never pass raw `String` or `u64` across an API boundary when the value has a name.
 - **Sealed `enum`s for exhaustive domain modelling;** lean on the exhaustiveness checker. `thiserror` for error types in library/adapter code.
 - **Cargo.toml is the source of truth** for third-party crates. Bazel reads it via `crate_universe` in `from_cargo` mode — never hand-write `BUILD` files for external crates. After editing Cargo.toml, repin with `just bazel-repin`. Both `Cargo.lock` and `MODULE.bazel.lock` are committed.
+- **Adding a new crate is a two-step Bazel update:**
+  1. Add the crate to `Cargo.toml`, then run `just bazel-repin` to regenerate `MODULE.bazel.lock` so the crate is fetchable.
+  2. Add `"@crates//:<crate-name>"` to the `deps = [...]` list of every Bazel target that uses it (typically `:lib`, `:lib_with_test_helpers`, `:app`, and any test target). `crate_universe` makes the crate *available* but does not auto-wire it into target dep lists. Forgetting step 2 produces `unresolved import` errors at `bazel build` time even though `cargo check` succeeds.
 
 ## TypeScript Conventions
 
@@ -109,6 +112,7 @@ Anything with a non-trivial input space — parsers, state machines, serializers
 
 - Tag with `#[ignore]` and Bazel `manual` tag.
 - Run via `just test-integration` or `bazel test //tests:integration_db --config=live` against docker-compose PostgreSQL.
+- **Required env:** `DATABASE_URL` must be exported in your shell before invoking `just test-integration`. The Justfile forwards it into the Bazel sandbox via `--test_env=DATABASE_URL`; without it set, the test silently skips (it cannot reach the DB from inside the sandbox).
 - Use real DB engines, not in-memory substitutes.
 
 ### Mutation Testing (CI, nightly)

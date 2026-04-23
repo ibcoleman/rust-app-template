@@ -10,18 +10,23 @@ dev:
 reset-cluster:
     kind delete cluster --name rust-app-template || true
 
+# Build the frontend bundle. Required before any Bazel target that consumes //frontend:dist.
+fe-build:
+    cd frontend && pnpm install --frozen-lockfile && pnpm build
+
 # Offline test suite (fakes; no Postgres required).
 # Note: test targets //tests:api and //tests:properties come online in Phase 2/3.
 # Until then, this recipe will fail with a bazel error (expected state for Phase 1).
-test:
+test: fe-build
     bazel test //tests:api //tests:properties --test_output=errors
 
-# Integration tests that require `just dev` to be running (real kind-hosted Postgres).
-test-integration:
-    bazel test //tests:integration_db --test_output=errors --cache_test_results=no --test_arg=--ignored --test_arg=--test-threads=1
+# Integration tests that require live Postgres reachable via DATABASE_URL.
+# DATABASE_URL is forwarded into the Bazel sandbox via --test_env.
+test-integration: fe-build
+    bazel test //tests:integration_db --test_output=errors --cache_test_results=no --test_arg=--ignored --test_arg=--test-threads=1 --test_env=DATABASE_URL
 
 # Formatting, linting, and `just test` — matches CI.
-check:
+check: fe-build
     cargo fmt --check
     cargo clippy --all-targets -- -D warnings
     just test
