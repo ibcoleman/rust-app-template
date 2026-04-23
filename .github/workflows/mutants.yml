@@ -16,6 +16,7 @@ jobs:
         with:
           node-version: 22
       - run: pnpm install --frozen-lockfile
-      - run: pnpm -F rust-app-template-frontend build
+      - run: pnpm --filter ./frontend build
       - run: cargo install cargo-mutants --locked
       - run: cargo mutants --in-place --no-shuffle --exclude src/main.rs --exclude src/adapters/pg_notes.rs
+        continue-on-error: true

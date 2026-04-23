@@ -62,6 +62,26 @@ Post-Phase 6, Bazel owns the Rust build, tests, and binary assembly; the fronten
 Do **not** add `cargo watch`, `tsc --watch`, `vite dev`, `vite preview`, `pnpm dev`, or other hot-reload pathways.
 They present a state that does not match the real build and confuse both humans and agents.
 
+## CI / Bazel Remote Cache
+
+**Cold Bazel + Rust builds in CI are expensive** (~1,500 actions, several minutes). Each GitHub Actions runner starts with an empty cache, so without a remote cache every CI run rebuilds all transitive dependencies from scratch.
+
+**Recommended fix: BuildBuddy free tier.**
+
+1. Sign up at [buildbuddy.io](https://buildbuddy.io) and grab an API key.
+2. Add to `.bazelrc`:
+   ```
+   build --remote_cache=grpcs://remote.buildbuddy.io
+   build --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY}
+   ```
+3. Add `BUILDBUDDY_API_KEY` as a GitHub Actions secret.
+4. Pass it as `env: BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}` in each workflow job.
+5. For local use, create a gitignored `.bazelrc.user` with the key hardcoded.
+
+**Trade-offs:** External dependency (outage = cold builds, not breakage); free tier has storage/bandwidth limits; build artifacts are uploaded to a third party. Cache-only — you still compile on the runner, just skip already-cached artifacts.
+
+This is not wired up in the template by default because it requires a per-project API key. Set it up immediately after cloning.
+
 ## Rust Conventions
 
 - **Use `Result` + `?` for every fallible operation.** No `unwrap()` / `expect()` in production code. Tests and one-off test helpers are fine.

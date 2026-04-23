@@ -24,3 +24,7 @@ frontend/dist
 # Tilt
 tilt_modules
 .tiltbuild
+
+# Docs
+docs/implementation-plans/
+
