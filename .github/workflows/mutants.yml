@@ -9,5 +9,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F rust-app-template-frontend build
       - run: cargo install cargo-mutants --locked
       - run: cargo mutants --no-shuffle -j 2 --exclude src/main.rs --exclude src/adapters/pg_notes.rs
