@@ -18,4 +18,4 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm -F rust-app-template-frontend build
       - run: cargo install cargo-mutants --locked
-      - run: cargo mutants --in-place --no-shuffle -j 2 --exclude src/main.rs --exclude src/adapters/pg_notes.rs
+      - run: cargo mutants --in-place --no-shuffle --exclude src/main.rs --exclude src/adapters/pg_notes.rs
