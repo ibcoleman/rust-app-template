@@ -25,26 +25,9 @@ WSL users: export `ENABLE_LSP_TOOL=1` from your shell rc file (e.g., `.zshrc`).
    ```
    (First arg: snake_case crate name. Second arg: kebab-case repo/binary name.)
 
-   The script edits:
-   - `Cargo.toml`
-   - `BUILD.bazel`
-   - `MODULE.bazel`
-   - `Tiltfile`
-   - `Dockerfile`
-   - `Justfile`
-   - `k8s/base/namespace.yaml`
-   - `k8s/base/deployment.yaml`
-   - `k8s/base/service.yaml`
-   - `k8s/base/postgres-statefulset.yaml`
-   - `k8s/base/postgres-service.yaml`
-   - `k8s/base/kustomization.yaml`
-   - `.devcontainer/devcontainer.json`
-   - `scripts/dev.sh`
-   - `scripts/doctor.sh`
-   - `.github/workflows/ci.yml`
-   - `.github/workflows/mutants.yml`
+   The script edits every tracked file containing `rust-app-template` or `rust_app_template` (enumerated via `git ls-files | xargs grep -l ...`), so new file types are covered automatically. Lockfiles (`Cargo.lock`, `MODULE.bazel.lock`, `frontend/pnpm-lock.yaml`) and the script itself are excluded.
 
-   Review `git diff` before committing.
+   Review `git diff` before committing. You may need to `just bazel-repin` and `(cd frontend && pnpm install)` afterwards to refresh lockfiles.
 
 4. **Verify tooling:**
    ```bash
