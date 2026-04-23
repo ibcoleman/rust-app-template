@@ -1,137 +1,171 @@
 # Architecture & Implementation Rationale
 
-## Phase 5: Frontend Integration & Build Architecture Pivot
+This document explains the major design choices behind `rust-app-template` and what
+the template trades away in exchange for them.
 
-### The Pivot: From Hermetic Bazel Builds to Pre-Built Frontend
+## 1. Why ports and adapters
 
-**Original approach (attempted):** Integrate `rules_js` Vite build into Bazel via `vite_build` rule, output via `copy_to_directory`, consumed by `rust-embed` at compile time.
+Pure domain types in the centre, side effects pushed to the edges. Services depend on
+port traits, never on adapter implementations directly.
 
-**Reality:** `rules_js` maturity and `vite_build` integration with `rules_rust` compile_data proved difficult. The tooling exists but integration friction was higher than acceptable for Phase 5.
+- **Types are guardrails.** A service that takes `Arc<dyn NoteRepository>` cannot reach
+  for a database, an HTTP client, or the clock. The compiler enforces what the design
+  intends.
+- **One pattern per adapter.** A new adapter is always: define a port trait in
+  `src/ports/`, implement it in `src/adapters/`, wire it into `AppState` in
+  `src/http/mod.rs`. There is no second way.
+- **Test seam falls out for free.** Offline tests use in-memory implementations of the
+  same port trait (`tests/support/mod.rs`); integration tests use the real adapters.
+  No mocking framework, no patching.
 
-**Solution:** Pre-build frontend outside Bazel; Bazel consumes the output via a `filegroup`.
+Worked examples in the demo domain: `GreetingPort` / `StaticGreeter`, and
+`NoteRepository` / `PgNotes`. The template's `docs/ADDING-ADAPTERS.md` walks through
+adding a new port end-to-end.
 
-### Architecture Overview
+## 2. Why one-engine Bazel
+
+Bazel (`rules_rust` + `crate_universe`) is the single canonical build for the Rust
+side. Frontend is built with `pnpm` + Vite outside Bazel and consumed as a `filegroup`
+(see §6 below for why the frontend isn't fully hermetic).
+
+- **`rules_rust` reads `Cargo.toml` via `crate_universe`.** Cargo stays the source of
+  truth for dependencies; we don't hand-write `BUILD` files for crates. Repinning is
+  one `just bazel-repin` command.
+- **`rust-embed` bakes frontend assets into the binary.** One deployable artifact,
+  no separate static-file servers or volume mounts.
+- **`bazel test //...` is the canonical test command.** No `cargo test` / `bazel test`
+  divergence to debug. CI runs the same command a developer runs.
+
+Trade-off: a small but real friction tax for adding a Cargo dependency
+(`Cargo.toml` edit + `just bazel-repin` + manual `@crates//:foo` deps add in
+`BUILD.bazel`). Documented in `CLAUDE.md`.
+
+## 3. Why property + mutation testing
+
+Examples are not enough. Two complementary techniques live above example tests:
+
+- **`proptest` (per-PR).** Property tests assert invariants over generated input
+  spaces — embedding length is always `EMBEDDING_DIM`, parsing then serializing is
+  the identity, an inserted ID is always retrievable. Hard to write code that passes
+  but is wrong.
+- **`cargo-mutants` (nightly CI).** Flips operators, deletes statements, replaces
+  return values. If a mutant survives, your tests didn't actually verify behaviour.
+  Mutation score is treated as a first-class quality metric — a drop is a regression
+  even if all example-based tests still pass.
+
+Both are wired into CI: `just test` runs property tests; `.github/workflows/mutants.yml`
+runs `cargo-mutants` on a nightly schedule.
+
+## 4. Why one inner loop
+
+There is one entry point for development: `just dev`. It boots a `kind` cluster,
+launches Tilt, and Tilt invokes `bazel build //:app` on file changes.
+
+What we explicitly *do not* support:
+
+- `cargo run` (skips the Bazel build path; can succeed when Bazel fails)
+- `cargo watch` / `vite dev` / `tsc --watch` (hot-reload paths that diverge from prod)
+- `vite preview` / `pnpm dev`
+
+Every developer change goes through a Docker-image round-trip into k8s. The dev loop
+matches the prod loop within a build-cycle. No surprises from "works on my laptop,
+breaks in CI."
+
+Cost: dev iterations are slower than `cargo run`. The win is that "works locally"
+genuinely means "works as deployed."
+
+## 5. Why no `cargo-generate` placeholders
+
+`cargo-generate` is the obvious-looking way to make a Rust template parameterizable.
+We don't use it.
+
+- **Author cost.** `cargo-generate` requires placeholder syntax in source files,
+  template metadata, and a separate test path for the templating itself. Maintaining
+  this for a single-author template is overhead with no gain.
+- **Consumer cost.** A consumer must install `cargo-generate`, learn its syntax, and
+  trust the template's parameterization is correct. The alternative — `git clone`
+  followed by one `sed` pass — is friction-light and inspectable.
+- **Renaming is rare.** A consumer renames the crate exactly once, on day zero. Any
+  later renames are about the *application*, not the template, so investing in
+  templating tooling for that one event is poor leverage.
+
+The rename is automated by `scripts/bulk-rename.sh`, which enumerates files via
+`git ls-files | xargs grep -l` so new file types added in later phases are covered
+without code changes (see `CLAUDE.md` § "Crate-Rename Sed Checklist").
+
+## 6. Why the frontend isn't built by Bazel
+
+Phase 5 attempted full Bazel hermeticity for the frontend (Vite via `rules_js`
+inside the Bazel sandbox). The integration friction with `rules_rust` `compile_data`
+proved higher than the hermeticity benefit. Current shape:
 
 ```
 frontend/src/
   └─ main.ts, api.ts, types.ts, ...
        ↓ (pnpm build)
 frontend/dist/
-  ├─ index.html
-  ├─ assets/main.*.js
-  └─ assets/*.css
-       ↓ (Bazel filegroup)
-//frontend:dist filegroup
-       ↓ (Rust compile_data)
-src/lib.rs + src/main.rs (via rust_library and rust_binary rules)
-  ├─ rust_library(compile_data = ["//frontend:dist"])
-  └─ rust_binary(compile_data = ["//frontend:dist"])
+       ↓ (Bazel filegroup //frontend:dist)
+src/lib.rs (rust-embed compile_data)
        ↓
    Binary with embedded assets
 ```
 
-### Implications
+What this costs:
 
-#### 1. Hermeticity Trade-off
-- **Lost:** Frontend build is not hermetic within Bazel. It relies on external state (pnpm, node_modules).
-- **Retained:** Rust side remains fully hermetic. Bazel controls all Rust dependencies and compilation.
-- **Justification:** Rust is the "real" build; frontend is a dependency. The cost of full JS hermeticity in Bazel outweighs the benefit.
+- `frontend/dist/` is gitignored. A fresh clone running `bazel build //...` fails
+  with `frontend/dist not found`. `just dev`, `just test`, and `just check` all
+  invoke `pnpm build` first via the `fe-build` Justfile recipe (added during Phase 8
+  iteration-1 gap fix).
+- `rust-embed` uses `debug-embed` so debug binaries also embed assets. Without it,
+  debug binaries would try to read assets from disk at runtime, breaking containerized
+  workflows.
+- CI must run `pnpm install --frozen-lockfile && pnpm build` before `bazel test //...`.
 
-#### 2. Fresh-Clone Workflow
+What we keep: the Rust side stays fully hermetic. Frontend is a pre-built dependency
+of the binary, not a runtime concern.
 
-When cloning the repository on a fresh machine:
+### `must-use-result` ESLint rule
 
-```bash
-git clone <repo>
-cd rust-app-template
+`eslint-plugin-neverthrow`'s `must-use-result` rule is disabled in
+`frontend/eslint.config.js` due to incompatibility with flat config + `@typescript-eslint`
+8.x. Unused-`Result` discipline is enforced at code review until the upstream rule
+catches up.
 
-# This will fail because frontend/dist is not committed:
-bazel build //:app  # ERROR: frontend/dist not found at compile time
+## 7. Pass 2 validation: `static-embedder-v2` rebuild
 
-# Solution: build frontend first, then Bazel can proceed
-cd frontend && pnpm install --frozen-lockfile && pnpm build && cd ..
-bazel build //:app  # SUCCESS
-```
+The template was validated by rebuilding `ibcoleman/static-embedder` (a real
+embedding service over pgvector + Model2Vec) on top of it as
+`ibcoleman/static-embedder-v2`. The original `static-embedder` repo was untouched
+throughout (verified by HEAD-SHA comparison before and after).
 
-The absence of `frontend/dist` on fresh clone is **intentional** and **catches misconfigurations early**.
+**Result: 1 gap-fix iteration to convergence** (well under the 5-iteration budget).
+Iteration 1 surfaced four template-side gaps:
 
-#### 3. CI Build Step
+1. Fresh-clone `bazel build` failed because `frontend/dist/` glob had `allow_empty=False`.
+2. `BUILD.bazel` `migrations/*.sql` glob had the same problem after deleting demo
+   migrations.
+3. Adding a Cargo dependency required a manual `BUILD.bazel` `deps` update that
+   wasn't documented.
+4. `just test-integration` silently skipped because `DATABASE_URL` wasn't forwarded
+   into the Bazel sandbox.
 
-To bootstrap CI, `frontend/dist` must be built before running Bazel tests:
+All four were fixed in PR
+[#3](https://github.com/ibcoleman/rust-app-template/pull/3) and verified by re-running
+the full v2 verification chain against a simulated fresh clone. No new gaps surfaced
+in iteration 2; AC6.5 (zero template-side changes in a final iteration) was satisfied.
 
-```yaml
-# .github/workflows/ci.yml
-steps:
-  - uses: pnpm/action-setup@v4
-    with:
-      version: 10
-  - uses: actions/setup-node@v4
-    with:
-      node-version: 22
-  - run: pnpm install --frozen-lockfile
-  - run: pnpm -F rust-app-template-frontend build
-  - run: bazel test //... --test_output=errors
-```
+The full gap log lives at `docs/implementation-plans/phase8-gaps/iteration-1.md`.
 
-This mirrors the fresh-clone workflow and makes CI requirements explicit.
-
-#### 4. Local Development (Tilt)
-
-`scripts/dev.sh` runs pnpm build before Tilt up:
-
-```bash
-pnpm install --frozen-lockfile >/dev/null 2>&1 && \
-pnpm build >/dev/null 2>&1 && \
-tilt up
-```
-
-Tiltfile watches `frontend/src/`, `frontend/index.html`, `frontend/vite.config.ts` and reruns pnpm build on changes before rebuilding the Bazel binary.
-
-#### 5. Compile-Time Embedding
-
-The Rust side uses `rust-embed` with `debug-embed` feature enabled:
-
-```rust
-#[derive(RustEmbed)]
-#[folder = "frontend/dist/"]
-#[debug_embed]  // Include files in debug builds too
-pub struct Assets;
-```
-
-**Why `debug-embed`:** Without it, debug binaries would attempt to read from disk at runtime, breaking containerized workflows where the filesystem layout differs. Embedded assets are always available regardless of binary mode.
-
-**Compile-time guarantee:** The `rust-embed` proc-macro expands at library compile time (in `lib.rs`, not just `main.rs`). It verifies the folder exists during compilation. If `frontend/dist/` is missing, the build fails with:
-
-```
-error: Could not read folder at path...
-```
-
-This is **intentional design**: catch misconfiguration before linking, not at runtime.
-
-### Why `compile_data` on Both `rust_library` and `rust_binary`
-
-- `rust_library(compile_data = ["//frontend:dist"])` (in src/lib.rs build rules) — The proc-macro expansion happens when the library is compiled. Bazel needs the dist folder present during this step.
-- `rust_binary(compile_data = ["//frontend:dist"])` (in src/main.rs build rules) — The binary links the library, which already has embedded assets. This is redundant for the embedding itself, but ensures the dist folder is available if any binary-level code references it.
-
-### Bazel Version Constraints
-
-- **Minimum:** Bazel 7.5.0 (for `rules_rust` + `rules_js` compatibility)
-- **Current:** Bazel 9.1.0 (for `aspect_rules_js 3.0.3` + `aspect_rules_ts 3.8.1`)
-
-### TypeScript & Linting
-
-- **TypeScript:** Pinned to exact version (5.5.4, not ~5.5) to ensure `aspect_rules_ts` reproducibility.
-- **ESLint:** Flat config with neverthrow plugin registered. **Note (Phase 5 cycle-3 pivot):** `must-use-result` rule is disabled due to `@typescript-eslint` 8.x / flat-config incompatibility. The guardrail is enforced at code-review time instead.
-- **Type Safety:** `@typescript-eslint/no-explicit-any: error` enforces explicit typing.
-
-### Summary of Trade-offs
+## Summary of trade-offs
 
 | Aspect | Gain | Cost |
-|--------|------|------|
-| **Frontend builds** | Simple, predictable | Not hermetic in Bazel |
-| **Local workflow** | Fast feedback (Tilt watches src/) | Requires pnpm in dev env |
-| **CI** | Explicit bootstrap step | Clear build requirements |
-| **Binary** | Assets always embedded | Larger debug binaries |
-| **Maintenance** | Less Bazel configuration | External build tool (pnpm) required |
+|---|---|---|
+| Ports & adapters | Compiler-enforced isolation; no mocking framework | One-time pattern learning curve |
+| One-engine Bazel | One canonical build; Cargo source-of-truth | Two-step add-a-dep workflow |
+| `proptest` + `cargo-mutants` | Tests that bite | More test-authoring effort upfront |
+| One inner loop (`just dev`) | Local == prod within a build cycle | Slower than `cargo run` |
+| No `cargo-generate` | No templating tax for author or consumer | Manual sed (one-shot, scripted) |
+| Pre-built frontend | Simple, debuggable | Not hermetic; CI bootstrap step |
 
-This design prioritizes **clarity and reliability** over maximal hermeticity.
+This template prioritizes **clarity, reliability, and compiler-enforced correctness**
+over maximal hermeticity or minimum keystrokes.
