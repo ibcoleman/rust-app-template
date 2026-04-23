@@ -10,7 +10,23 @@ custom_build(
         cp -f bazel-bin/app ./app && \\
         docker build -t $EXPECTED_REF .
     """,
-    deps = ["BUILD.bazel", "Cargo.toml", "Cargo.lock", "MODULE.bazel", "src", "Dockerfile", "frontend/src", "frontend/index.html", "frontend/vite.config.ts", "frontend/dist"],
+    # IMPORTANT: only list source files here. Listing a build *output*
+    # (e.g. `frontend/dist`) causes an infinite rebuild loop because the
+    # build command regenerates it, which Tilt sees as a file change.
+    deps = [
+        "BUILD.bazel",
+        "Cargo.toml",
+        "Cargo.lock",
+        "MODULE.bazel",
+        "src",
+        "Dockerfile",
+        "frontend/src",
+        "frontend/index.html",
+        "frontend/vite.config.ts",
+        "frontend/tsconfig.json",
+        "frontend/package.json",
+        "frontend/pnpm-lock.yaml",
+    ],
 )
 
 k8s_yaml(kustomize("k8s/overlays/local"))
