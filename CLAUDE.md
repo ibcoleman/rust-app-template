@@ -132,7 +132,7 @@ Anything with a non-trivial input space — parsers, state machines, serializers
 
 - Tag with `#[ignore]` and Bazel `manual` tag.
 - Run via `just test-integration` or `bazel test //tests:integration_db --config=live` against docker-compose PostgreSQL.
-- **Required env:** `DATABASE_URL` must be exported in your shell before invoking `just test-integration`. The Justfile forwards it into the Bazel sandbox via `--test_env=DATABASE_URL`; without it set, the test silently skips (it cannot reach the DB from inside the sandbox). Easiest path: `cp .env.example .env && set -a && source .env && set +a` (see `.env.example` for documented defaults that match the local kind-cluster postgres).
+- **`DATABASE_URL` is optional.** The test defaults to `postgres://app:app@localhost:5432/app`, which matches the kind-cluster postgres that Tilt port-forwards while `just dev` is running — so in the canonical flow (`just dev` in one terminal, `just test-integration` in another) you don't need to set anything. To override (e.g. point at a docker-compose postgres on a different port), export `DATABASE_URL` in your shell; the Justfile forwards it into the Bazel sandbox via `--test_env=DATABASE_URL`.
 - Use real DB engines, not in-memory substitutes.
 
 ### Mutation Testing (CI, nightly)

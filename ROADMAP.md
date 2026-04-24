@@ -21,10 +21,6 @@ Last updated: 2026-04-23
 - `just add-dep <crate> [args]` wrapping `cargo add` + `just bazel-repin`,
   with a reminder about the manual BUILD.bazel step for `:app` / `rust_test`
   targets.
-- `.env.example` documenting `DATABASE_URL`, `BIND_ADDR`, `RUST_LOG` defaults
-  that match the local kind-cluster postgres. Intentionally not auto-loaded
-  by just/Rust — the template keeps k8s + Tilt as the one dev path; `.env`
-  only matters for the `just test-integration` shell invocation.
 
 ## In flight
 
