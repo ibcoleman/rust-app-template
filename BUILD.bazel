@@ -1,5 +1,6 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
 
 package(default_visibility = ["//visibility:public"])
 
