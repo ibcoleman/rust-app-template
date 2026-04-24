@@ -6,6 +6,10 @@ default:
 doctor:
     @bash scripts/doctor.sh
 
+# Rename the template to a new project name (kebab-case; snake_case is derived). Example: `just rename my-app`.
+rename kebab:
+    bash scripts/bulk-rename.sh $(echo {{kebab}} | tr '-' '_') {{kebab}}
+
 # Bring up kind cluster + Tilt. Single dev-loop entry point.
 dev:
     @bash scripts/dev.sh
@@ -13,6 +17,48 @@ dev:
 # Delete the kind cluster entirely.
 reset-cluster:
     kind delete cluster --name rust-app-template || true
+
+# Tail logs from a cluster component. Run without args to list available components.
+logs component="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "{{component}}" ]; then
+        echo "Available components:"
+        just _components
+        exit 0
+    fi
+    kubectl logs -l app={{component}} --tail=100 -f
+
+# Drop into a psql session against the local postgres instance.
+psql:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pod=$(kubectl get pod -l app=postgres -o name 2>/dev/null | head -1)
+    if [ -z "$pod" ]; then
+        echo "No postgres pod found; is 'just dev' running?" >&2
+        exit 1
+    fi
+    kubectl exec -it "$pod" -- psql -U app -d app
+
+# Open a shell inside a cluster component. Run without args to list available components.
+shell component="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "{{component}}" ]; then
+        echo "Available components:"
+        just _components
+        exit 0
+    fi
+    pod=$(kubectl get pod -l app={{component}} -o name 2>/dev/null | head -1)
+    if [ -z "$pod" ]; then
+        echo "No pod found with label app={{component}}" >&2
+        exit 1
+    fi
+    kubectl exec -it "$pod" -- sh
+
+# List `app` labels of pods in the current kubectl context (helper for `logs` / `shell`).
+_components:
+    @kubectl get pods -o jsonpath='{range .items[*]}{.metadata.labels.app}{"\n"}{end}' 2>/dev/null | sort -u | grep -v '^$' | sed 's/^/  /'
 
 # Build the frontend bundle. Required before any Bazel target that consumes //frontend:dist.
 fe-build:
@@ -49,6 +95,15 @@ mutants:
 bazel-repin:
     CARGO_BAZEL_REPIN=1 bazel mod tidy
     bazel fetch @crates//...
+
+# Add a Rust dependency: runs `cargo add` then `just bazel-repin`. See docs/ADDING-ADAPTERS.md for the manual BUILD.bazel step (:app / rust_test targets).
+add-dep crate *args:
+    cargo add {{crate}} {{args}}
+    just bazel-repin
+    @echo ""
+    @echo "if {{crate}} is used by :app or a rust_test target, add"
+    @echo "  \"@crates//:{{crate}}\""
+    @echo "to that target's deps list (see docs/ADDING-ADAPTERS.md)."
 
 # Add a frontend dependency and regenerate the lockfile.
 add-fe-dep pkg:
