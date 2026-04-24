@@ -12,9 +12,21 @@ spec:
       labels:
         app: rust-app-template
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: app
         image: rust-app-template:dev
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
         ports:
         - containerPort: 8080
           name: http
