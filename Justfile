@@ -6,7 +6,7 @@ default:
 doctor:
     @bash scripts/doctor.sh
 
-# Rename the template to a new project name (kebab-case; snake_case is derived). Example: `just rename my-app`.
+# Rename the template to a new project name. Example: `just rename my-app`.
 rename kebab:
     bash scripts/bulk-rename.sh $(echo {{kebab}} | tr '-' '_') {{kebab}}
 
@@ -96,7 +96,7 @@ bazel-repin:
     CARGO_BAZEL_REPIN=1 bazel mod tidy
     bazel fetch @crates//...
 
-# Add a Rust dependency: runs `cargo add` then `just bazel-repin`. See docs/ADDING-ADAPTERS.md for the manual BUILD.bazel step (:app / rust_test targets).
+# Add a Rust dependency. Must add manual BUILD.bazel step for app and rust_test.
 add-dep crate *args:
     cargo add {{crate}} {{args}}
     just bazel-repin
