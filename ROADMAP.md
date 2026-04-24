@@ -70,8 +70,6 @@ _(none)_
   test-integration`. A staleness check (compare `frontend/dist` mtime to
   `frontend/src` + `frontend/package.json`) would skip the ~several-second
   rebuild when nothing changed.
-- **`just fmt`** — currently only `just fix` (fmt + clippy fix). Plain `fmt`
-  is common muscle memory.
 
 ## DX: template extensibility story
 
@@ -145,9 +143,6 @@ _(none)_
 - **`.http` file or `docs/API-EXAMPLES.md`** — "how do I exercise the API
   while `just dev` is up?" currently means reading source. A checked-in
   REST Client `.http` file (or equivalent curl snippets) closes that gap.
-- **`just reset-db`** — today the only reset is `just reset-cluster`
-  (nuclear). A light-weight path that drops + re-migrates without
-  rebuilding the kind cluster is a daily-use nicety.
 
 ## Production-hardening candidates (separate track)
 
