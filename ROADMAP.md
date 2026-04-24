@@ -21,6 +21,10 @@ Last updated: 2026-04-23
 - `just add-dep <crate> [args]` wrapping `cargo add` + `just bazel-repin`,
   with a reminder about the manual BUILD.bazel step for `:app` / `rust_test`
   targets.
+- `.env.example` documenting `DATABASE_URL`, `BIND_ADDR`, `RUST_LOG` defaults
+  that match the local kind-cluster postgres. Intentionally not auto-loaded
+  by just/Rust — the template keeps k8s + Tilt as the one dev path; `.env`
+  only matters for the `just test-integration` shell invocation.
 
 ## In flight
 
@@ -31,9 +35,6 @@ _(none)_
 - **Seed data** — `just dev` currently lands on an empty UI. Add `just seed`
   (or a Tilt resource that runs post-migration) that inserts a handful of
   notes so a fresh clone demos something real.
-- **`.env.example`** — commit a template covering `DATABASE_URL`, `BIND_ADDR`,
-  `RUST_LOG`. The README and CLAUDE.md both reference `DATABASE_URL` but
-  nothing ships an example; `just test-integration` silently skips without it.
 - **`just doctor` should check versions**, not just presence. `bazel 6` vs
   `bazel 7`, `kind 0.15` vs `0.20`, `pnpm` major mismatches are classic
   lost-afternoon material.
