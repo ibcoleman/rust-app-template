@@ -15,7 +15,9 @@ rust_test(
         "@crates//:axum",
         "@crates//:axum-test",
         "@crates//:serde_json",
+        # @EXAMPLE-BLOCK-START notes
         "@crates//:time",
+        # @EXAMPLE-BLOCK-END notes
         "@crates//:tokio",
     ],
     proc_macro_deps = [
@@ -34,7 +36,9 @@ rust_test(
     deps = [
         "//:lib",
         "@crates//:proptest",
+        # @EXAMPLE-BLOCK-START notes
         "@crates//:time",
+        # @EXAMPLE-BLOCK-END notes
         "@crates//:tokio",
     ],
     proc_macro_deps = [
@@ -42,6 +46,7 @@ rust_test(
     ],
 )
 
+# @EXAMPLE-BLOCK-START notes
 rust_test(
     name = "integration_db",
     srcs = [
@@ -64,3 +69,4 @@ rust_test(
         "@crates//:async-trait",
     ],
 )
+# @EXAMPLE-BLOCK-END notes

@@ -1,3 +1,8 @@
+// @EXAMPLE-FILE notes
+// HTTP handlers for the `Note` example domain — deleted by
+// `just clean-examples`. Pattern reference for JSON-in / JSON-out routes
+// with path + query extractors.
+
 use std::str::FromStr;
 use std::sync::Arc;
 

@@ -1,11 +1,16 @@
 use proptest::prelude::*;
 use rust_app_template::adapters::StaticGreeter;
 use rust_app_template::domain::MAX_GREET_NAME_LEN;
-use rust_app_template::ports::{GreetError, GreetingPort, NewNote, NoteRepository};
+use rust_app_template::ports::{GreetError, GreetingPort};
+// @EXAMPLE-BLOCK-START notes
+use rust_app_template::ports::{NewNote, NoteRepository};
 use std::sync::Arc;
+// @EXAMPLE-BLOCK-END notes
 
 mod support;
+// @EXAMPLE-BLOCK-START notes
 use support::InMemoryNoteRepository;
+// @EXAMPLE-BLOCK-END notes
 
 proptest! {
     /// Property 1: Valid names produce a response containing the name verbatim and ending with "!"
@@ -44,6 +49,7 @@ proptest! {
         );
     }
 
+    // @EXAMPLE-BLOCK-START notes
     /// Property 3 (Notes): For any body of length 1..=MAX_NOTE_BODY_LEN,
     /// create → get round-trip returns Some(Note) with matching body.
     #[test]
@@ -98,4 +104,5 @@ proptest! {
             );
         }
     }
+    // @EXAMPLE-BLOCK-END notes
 }

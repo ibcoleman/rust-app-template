@@ -21,6 +21,13 @@ Last updated: 2026-04-23
 - `just add-dep <crate> [args]` wrapping `cargo add` + `just bazel-repin`,
   with a reminder about the manual BUILD.bazel step for `:app` / `rust_test`
   targets.
+- Cordoned the example domain with `@EXAMPLE-FILE` / `@EXAMPLE-BLOCK-START`
+  / `@EXAMPLE-BLOCK-END` banners, plus `just clean-examples` to strip them.
+  `Note` (DB-backed CRUD) is what gets removed; `Greeter` stays as a
+  minimal reference of the port/adapter/handler pattern without a DB.
+  Post-strip `cargo fmt` runs to normalize whitespace; verified `cargo
+  check`, `clippy -D warnings`, `cargo fmt --check`, and `cargo test` all
+  clean afterwards.
 
 ## In flight
 
@@ -50,11 +57,6 @@ _(none)_
   `STARTING-A-PROJECT.md` plus the order rules (rename first, strip
   examples, scaffold domains, defer auth/workers until the domain is
   stable). CLAUDE.md is where agents actually look.
-- **Cordon off the example domain** — either move `Note` + `Greeter` into
-  `examples/` or add file-header banners so it's unambiguous they're
-  reference code, not scaffolding. Pair with `just clean-examples` that
-  strips them and leaves empty module wiring with TODOs, so a fresh project
-  starts from empty slots instead of a half-example codebase.
 - **`.agents/prompts/`** — pre-written prompts for common template-onboarding
   operations (`new-domain`, `add-migration`, `add-auth`, etc.) that
   enumerate conventions and invoke the scaffolders. Lets agents skip

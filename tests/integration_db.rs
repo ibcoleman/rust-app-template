@@ -1,3 +1,6 @@
+// @EXAMPLE-FILE notes
+// Integration tests for the `Note` example domain — deleted by
+// `just clean-examples` along with the rest of the Note scaffolding.
 #![cfg(feature = "test-helpers")]
 
 //! Integration tests for PgNotes against real Postgres.

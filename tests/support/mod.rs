@@ -8,11 +8,12 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 use async_trait::async_trait;
+use rust_app_template::ports::{GreetError, GreetingPort};
+// @EXAMPLE-BLOCK-START notes
 use rust_app_template::domain::NoteId;
-use rust_app_template::ports::{
-    GreetError, GreetingPort, NewNote, Note, NoteRepository, RepoError,
-};
+use rust_app_template::ports::{NewNote, Note, NoteRepository, RepoError};
 use time::OffsetDateTime;
+// @EXAMPLE-BLOCK-END notes
 
 /// Fake implementation of `GreetingPort` for testing.
 /// Holds a `HashMap<Option<String>, Result<String, GreetError>>` so tests can seed canned responses.
@@ -45,6 +46,7 @@ impl GreetingPort for FakeGreeter {
     }
 }
 
+// @EXAMPLE-BLOCK-START notes
 /// In-memory implementation of `NoteRepository` for testing.
 /// Stores notes in a `Mutex<Vec<Note>>`. Uses `Mutex.lock().unwrap()` which is fine in tests.
 #[derive(Default)]
@@ -88,3 +90,4 @@ impl NoteRepository for InMemoryNoteRepository {
         Ok(notes.into_iter().take(limit as usize).collect())
     }
 }
+// @EXAMPLE-BLOCK-END notes

@@ -1,3 +1,8 @@
+// @EXAMPLE-FILE notes
+// Postgres adapter for the `Note` example domain — deleted by
+// `just clean-examples`. Kept as a concrete reference of the
+// `Port → sqlx → domain type` mapping for DB-backed adapters.
+
 use async_trait::async_trait;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use time::OffsetDateTime;

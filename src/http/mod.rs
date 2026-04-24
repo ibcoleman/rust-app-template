@@ -1,6 +1,8 @@
 pub mod error;
 pub mod greet;
+// @EXAMPLE-BLOCK-START notes
 pub mod notes;
+// @EXAMPLE-BLOCK-END notes
 
 use std::sync::Arc;
 
@@ -9,13 +11,17 @@ use axum::{
     extract::Path,
     http::{header, StatusCode},
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::get,
     Router,
 };
 use rust_embed::RustEmbed;
 use tower_http::trace::TraceLayer;
 
-use crate::ports::{GreetingPort, NoteRepository};
+use crate::ports::GreetingPort;
+// @EXAMPLE-BLOCK-START notes
+use axum::routing::post;
+use crate::ports::NoteRepository;
+// @EXAMPLE-BLOCK-END notes
 
 #[derive(RustEmbed)]
 #[folder = "frontend/dist/"]
@@ -24,7 +30,9 @@ struct Assets;
 #[derive(Clone)]
 pub struct AppState {
     pub greeter: Arc<dyn GreetingPort>,
+    // @EXAMPLE-BLOCK-START notes
     pub notes: Arc<dyn NoteRepository>,
+    // @EXAMPLE-BLOCK-END notes
 }
 
 pub fn router(state: AppState) -> Router {
@@ -33,11 +41,13 @@ pub fn router(state: AppState) -> Router {
         .route("/assets/{*path}", get(asset))
         .route("/healthz", get(healthz))
         .route("/api/greet", get(greet::handler))
+        // @EXAMPLE-BLOCK-START notes
         .route(
             "/api/notes",
             post(notes::create_note).get(notes::list_notes),
         )
         .route("/api/notes/{id}", get(notes::get_note))
+        // @EXAMPLE-BLOCK-END notes
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }

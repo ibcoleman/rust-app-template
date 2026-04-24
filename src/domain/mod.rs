@@ -1,12 +1,13 @@
+/// Upper bound on the `name` argument accepted by the greeting port.
+/// Keeps responses bounded in size and exercises the `BadRequest` path.
+pub const MAX_GREET_NAME_LEN: usize = 64;
+
+// @EXAMPLE-BLOCK-START notes
 use std::fmt;
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
-/// Upper bound on the `name` argument accepted by the greeting port.
-/// Keeps responses bounded in size and exercises the `BadRequest` path.
-pub const MAX_GREET_NAME_LEN: usize = 64;
 
 /// Upper bound on note body length in bytes.
 pub const MAX_NOTE_BODY_LEN: usize = 4096;
@@ -39,3 +40,4 @@ impl FromStr for NoteId {
         Uuid::parse_str(s).map(Self)
     }
 }
+// @EXAMPLE-BLOCK-END notes

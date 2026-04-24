@@ -1,3 +1,7 @@
+// @EXAMPLE-FILE notes
+// This whole file is part of the `Note` example domain and gets deleted by
+// `just clean-examples`. See docs/ADDING-ADAPTERS.md for the pattern.
+
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

@@ -18,14 +18,21 @@ async fn main() -> anyhow::Result<()> {
         .parse()
         .context("BIND_ADDR is not a valid socket address")?;
 
+    // @EXAMPLE-BLOCK-START notes
     let database_url = std::env::var("DATABASE_URL").context("DATABASE_URL is required")?;
     let notes = std::sync::Arc::new(
         rust_app_template::adapters::PgNotes::connect(&database_url)
             .await
             .context("failed to connect to database")?,
     );
+    // @EXAMPLE-BLOCK-END notes
     let greeter = std::sync::Arc::new(rust_app_template::adapters::StaticGreeter::new());
-    let state = rust_app_template::http::AppState { greeter, notes };
+    let state = rust_app_template::http::AppState {
+        greeter,
+        // @EXAMPLE-BLOCK-START notes
+        notes,
+        // @EXAMPLE-BLOCK-END notes
+    };
     let app = rust_app_template::http::router(state);
 
     let listener = TcpListener::bind(bind_addr).await.context("bind failed")?;

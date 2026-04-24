@@ -10,6 +10,10 @@ doctor:
 rename kebab:
     bash scripts/bulk-rename.sh $(echo {{kebab}} | tr '-' '_') {{kebab}}
 
+# Remove the example `Note` domain (DB-backed CRUD). Keeps `Greeter` as a minimal reference.
+clean-examples:
+    @bash scripts/clean-examples.sh
+
 # Bring up kind cluster + Tilt. Single dev-loop entry point.
 dev:
     @bash scripts/dev.sh

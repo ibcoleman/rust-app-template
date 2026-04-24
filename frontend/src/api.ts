@@ -1,4 +1,5 @@
 import {ResultAsync} from "neverthrow";
+// @EXAMPLE-BLOCK-START notes
 import type {Note, NoteId} from "./types";
 
 type ApiError = {message: string};
@@ -15,6 +16,7 @@ function jsonRequest<T>(
     (e) => ({message: String(e)}),
   );
 }
+// @EXAMPLE-BLOCK-END notes
 
 export const api = {
   greet: (name?: string) =>
@@ -24,6 +26,7 @@ export const api = {
       ).then((r) => r.text()),
       (e) => ({message: String(e)}),
     ),
+  // @EXAMPLE-BLOCK-START notes
   createNote: (body: string) =>
     jsonRequest<Note>("/api/notes", {
       method: "POST",
@@ -32,4 +35,5 @@ export const api = {
     }),
   listNotes: (limit = 20) => jsonRequest<Array<Note>>(`/api/notes?limit=${limit}`),
   getNote: (id: NoteId) => jsonRequest<Note>(`/api/notes/${id}`),
+  // @EXAMPLE-BLOCK-END notes
 };

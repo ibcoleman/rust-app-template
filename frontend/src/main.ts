@@ -1,11 +1,14 @@
 import {api} from "./api";
+// @EXAMPLE-BLOCK-START notes
 import type {Note} from "./types";
+// @EXAMPLE-BLOCK-END notes
 
 // DOM references
 const appDiv = document.getElementById("app");
 const greetingDiv = document.createElement("div");
 greetingDiv.id = "greeting";
 
+// @EXAMPLE-BLOCK-START notes
 const notesSection = document.createElement("section");
 
 const createForm = document.createElement("form");
@@ -17,14 +20,17 @@ createForm.innerHTML = `
 
 const notesList = document.createElement("ul");
 notesList.id = "notes";
+// @EXAMPLE-BLOCK-END notes
 
 // Mount elements
 if (appDiv) {
   appDiv.appendChild(greetingDiv);
+  // @EXAMPLE-BLOCK-START notes
   appDiv.appendChild(createForm);
   appDiv.appendChild(notesSection);
   notesSection.appendChild(document.createElement("h2")).textContent = "Notes";
   notesSection.appendChild(notesList);
+  // @EXAMPLE-BLOCK-END notes
 }
 
 // Load greeting on page load
@@ -41,6 +47,7 @@ async function loadGreeting(): Promise<void> {
   );
 }
 
+// @EXAMPLE-BLOCK-START notes
 // Load notes on page load
 async function loadNotes(): Promise<void> {
   const result = await api.listNotes();
@@ -93,7 +100,10 @@ createForm.addEventListener("submit", async (e) => {
     },
   );
 });
+// @EXAMPLE-BLOCK-END notes
 
 // Initialize on load
 loadGreeting().catch((e) => console.error("Failed to load greeting:", e));
+// @EXAMPLE-BLOCK-START notes
 loadNotes().catch((e) => console.error("Failed to load notes:", e));
+// @EXAMPLE-BLOCK-END notes

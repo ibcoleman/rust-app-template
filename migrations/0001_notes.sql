@@ -1,3 +1,6 @@
+-- @EXAMPLE-FILE notes
+-- Migration for the example `Note` domain — deleted by `just clean-examples`.
+
 CREATE TABLE notes (
     id         UUID PRIMARY KEY,
     body       TEXT NOT NULL,

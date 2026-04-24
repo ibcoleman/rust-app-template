@@ -1,21 +1,32 @@
 mod support;
 
-use axum::http::StatusCode;
 use axum_test::TestServer;
 use rust_app_template::adapters::StaticGreeter;
 use rust_app_template::http::{router, AppState};
 use rust_app_template::ports::GreetError;
 use std::sync::Arc;
-use support::{FakeGreeter, InMemoryNoteRepository};
+use support::FakeGreeter;
+// @EXAMPLE-BLOCK-START notes
+use axum::http::StatusCode;
+use support::InMemoryNoteRepository;
+// @EXAMPLE-BLOCK-END notes
+
+// A helper that builds AppState for greet/healthz tests.
+// When clean-examples strips the `notes` field from AppState, the
+// struct literal here reduces back to a single field.
+fn test_state() -> AppState {
+    AppState {
+        greeter: Arc::new(StaticGreeter::new()),
+        // @EXAMPLE-BLOCK-START notes
+        notes: Arc::new(InMemoryNoteRepository::new()),
+        // @EXAMPLE-BLOCK-END notes
+    }
+}
 
 #[tokio::test]
 async fn healthz_returns_ok() {
     // Arrange
-    let state = AppState {
-        greeter: Arc::new(StaticGreeter::new()),
-        notes: Arc::new(InMemoryNoteRepository::new()),
-    };
-    let app = router(state);
+    let app = router(test_state());
     let server = TestServer::new(app).expect("failed to create test server");
 
     // Act
@@ -29,11 +40,7 @@ async fn healthz_returns_ok() {
 #[tokio::test]
 async fn greet_with_name_returns_personalized_greeting() {
     // Arrange - AC2.1: GET /api/greet?name=Ian → 200, body "Hello, Ian!"
-    let state = AppState {
-        greeter: Arc::new(StaticGreeter::new()),
-        notes: Arc::new(InMemoryNoteRepository::new()),
-    };
-    let app = router(state);
+    let app = router(test_state());
     let server = TestServer::new(app).expect("failed to create test server");
 
     // Act
@@ -47,11 +54,7 @@ async fn greet_with_name_returns_personalized_greeting() {
 #[tokio::test]
 async fn greet_without_name_returns_default_greeting() {
     // Arrange - AC2.2: GET /api/greet (no name param) → 200, body "Hello, world!"
-    let state = AppState {
-        greeter: Arc::new(StaticGreeter::new()),
-        notes: Arc::new(InMemoryNoteRepository::new()),
-    };
-    let app = router(state);
+    let app = router(test_state());
     let server = TestServer::new(app).expect("failed to create test server");
 
     // Act
@@ -66,11 +69,7 @@ async fn greet_without_name_returns_default_greeting() {
 async fn greet_with_overlong_name_returns_400() {
     // Arrange - AC2.5: GET /api/greet?name=<65-char string> → 400 Bad Request,
     // JSON body contains "error" key with "invalid name" prefix
-    let state = AppState {
-        greeter: Arc::new(StaticGreeter::new()),
-        notes: Arc::new(InMemoryNoteRepository::new()),
-    };
-    let app = router(state);
+    let app = router(test_state());
     let server = TestServer::new(app).expect("failed to create test server");
 
     // A 65-character name (exceeds MAX_GREET_NAME_LEN=64)
@@ -96,7 +95,9 @@ async fn greet_backend_error_returns_500() {
 
     let state = AppState {
         greeter: fake_greeter,
+        // @EXAMPLE-BLOCK-START notes
         notes: Arc::new(InMemoryNoteRepository::new()),
+        // @EXAMPLE-BLOCK-END notes
     };
     let app = router(state);
     let server = TestServer::new(app).expect("failed to create test server");
@@ -110,6 +111,7 @@ async fn greet_backend_error_returns_500() {
     assert_eq!(body["error"].as_str(), Some("internal: boom"));
 }
 
+// @EXAMPLE-BLOCK-START notes
 // AC2.3: create → get returns the same note
 #[tokio::test]
 async fn note_create_and_get_roundtrip() {
@@ -259,3 +261,4 @@ async fn note_list_with_limit_zero_returns_empty() {
     let list: Vec<serde_json::Value> = resp.json();
     assert_eq!(list.len(), 0);
 }
+// @EXAMPLE-BLOCK-END notes

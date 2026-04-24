@@ -6,7 +6,10 @@ use axum::{
 use serde_json::json;
 use thiserror::Error;
 
-use crate::ports::{GreetError, RepoError};
+use crate::ports::GreetError;
+// @EXAMPLE-BLOCK-START notes
+use crate::ports::RepoError;
+// @EXAMPLE-BLOCK-END notes
 
 #[derive(Debug, Error)]
 pub enum ApiError {
@@ -14,9 +17,11 @@ pub enum ApiError {
     BadRequest(String),
     #[error(transparent)]
     Greet(#[from] GreetError),
+    // @EXAMPLE-BLOCK-START notes
     #[error(transparent)]
     Repo(#[from] RepoError),
-    /// Used by `GET /api/notes/:id` when the row is absent.
+    // @EXAMPLE-BLOCK-END notes
+    /// Returned by route handlers when a requested resource is absent.
     #[error("not found")]
     NotFound,
 }
@@ -31,10 +36,12 @@ impl IntoResponse for ApiError {
             ApiError::Greet(GreetError::Backend(m)) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, format!("internal: {m}"))
             }
+            // @EXAMPLE-BLOCK-START notes
             ApiError::Repo(RepoError::Validation(m)) => (StatusCode::BAD_REQUEST, m.clone()),
             ApiError::Repo(RepoError::Backend(m)) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, format!("internal: {m}"))
             }
+            // @EXAMPLE-BLOCK-END notes
             ApiError::NotFound => (StatusCode::NOT_FOUND, "not found".to_string()),
         };
         (status, Json(json!({ "error": msg }))).into_response()
