@@ -17,6 +17,12 @@ frontend/dist
 .vscode/*.local.json
 .DS_Store
 
+# jj (Jujutsu) VCS state
+.jj
+
+# Built binary (produced by `bazel build`, should not be committed)
+/app
+
 # Local env
 .env
 .env.local
